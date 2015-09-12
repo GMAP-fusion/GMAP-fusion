@@ -101,7 +101,7 @@ sub capture_fusion_support {
     my $pipeliner = new Pipeliner(-verbose => 2);
 
     my $sorted_alignments_file = "$bam_file.sorted_by_read_n_contig.sam.gz";
-    my $cmd = "samtools view $bam_file | sort -k1,1 -k3,3 | gzip -c - > $sorted_alignments_file";
+    my $cmd = "samtools view $bam_file | sort -T . -k1,1 -k3,3 | gzip -c - > $sorted_alignments_file";
 
     $pipeliner->add_commands(new Command($cmd, "$sorted_alignments_file.ok"));
     
