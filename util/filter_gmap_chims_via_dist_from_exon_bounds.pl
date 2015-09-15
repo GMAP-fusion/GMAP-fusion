@@ -6,7 +6,6 @@ use warnings;
 my $usage = "usage: $0 gmap.gff3.summary minJ minJS min_novel_J\n\n";
 
 my $gmap_summary_file = $ARGV[0] or die $usage;
-
 my $minJ = $ARGV[1];
 my $minJS = $ARGV[2];
 my $min_novel_J = $ARGV[3];
@@ -18,11 +17,15 @@ unless (defined ($minJ) && defined($minJS) && defined($min_novel_J)) {
     die $usage;
 }
 
+my $filt_file = "$gmap_summary_file.filt";
+open (my $ofh, ">$filt_file") or die "Error, cannot write to $filt_file";
+
 
 open (my $fh, $gmap_summary_file) or die $!;
 while (<$fh>) {
     if (/^\#/) { # header
         print $_;
+        print $ofh $_;
         next;
     }
 
@@ -35,15 +38,18 @@ while (<$fh>) {
     my $S = $x[5];
     
     my $left_brkpt_entropy = $x[7];
-    my $right_brkpt_entropy = $x[8];
+    my $right_brkpt_entropy = $x[9];
     
     
     if ($info ne '.') {
-        my ($geneA, $trans_brktpA, $distA, $breakpointA, 
-            $geneB, $trans_brkptB, $distB, $breakpointB, 
+        my ($geneA, $distA, $trans_brkptA, $breakpointA, 
+            $geneB, $distB, $trans_brkptB, $breakpointB, 
             $chim) = split(/;/, $info);
 
-        if ($geneA eq $geneB) { next; }
+        if ($geneA eq $geneB) {
+            print $ofh "#$line\t$chim\tNO SELFIES\n";
+            next; 
+        }
         
         my $record_pass = 0;
 
@@ -62,7 +68,8 @@ while (<$fh>) {
         
             ## but...  if only junction reads, the anchors must meet the min entropy requirement.
             if ($J > 0 && $S == 0 && ($left_brkpt_entropy < $MIN_ANCHOR_ENTROPY || $right_brkpt_entropy < $MIN_ANCHOR_ENTROPY) ) {
-                $record_pass = 0;
+                print $ofh "#$line\t$chim\tFails to meet min entropy requirement at junction anchor region\n";
+                next;
             }
             
         }
@@ -76,6 +83,10 @@ while (<$fh>) {
         
         if ($record_pass) {
             print "$line\t$chim\n";
+            print $ofh "$line\t$chim\n";
+        }
+        else {
+            print $ofh "#$line\t$chim\tFails to meet minJ or minJS_sum requirement.\n";
         }
     }
     

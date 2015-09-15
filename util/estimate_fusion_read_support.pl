@@ -21,6 +21,7 @@ my $right_fq_file = $ARGV[3] or die $usage;
 
 my $ANCHOR = 12;
 my $MIN_PERCENT_IDENTITY = 98;
+my $MIN_ENTROPY = 1.5;
 
 $trans_fasta = &ensure_full_path($trans_fasta);
 $chims_described = &ensure_full_path($chims_described);
@@ -47,9 +48,11 @@ main: {
     
 
     my $bowtie2_bam = &align_reads_using_bowtie2($chim_candidates_fasta_filename, $left_fq_file, $right_fq_file);
-        
-    my %fusion_support = &capture_fusion_support($bowtie2_bam, \%chims);
 
+    my %trans_seq_entropy = &compute_trans_seq_entropy(\%chim_seqs);
+    
+    my %fusion_support = &capture_fusion_support($bowtie2_bam, \%chims, \%trans_seq_entropy);
+    
     
     ## generate output, include junction and spanning frag support info:
     
@@ -107,7 +110,7 @@ main: {
 
 ####
 sub capture_fusion_support {
-    my ($bam_file, $chims_href) = @_;
+    my ($bam_file, $chims_href, $seq_entropy_href) = @_;
 
 
     my %fusion_support;
@@ -167,17 +170,34 @@ sub capture_fusion_support {
         my ($B_lend, $B_rend) = ($trans_coords_B_aref->[0]->[0], $trans_coords_B_aref->[$#$trans_coords_B_aref]->[1]);
         
         if ($A_lend < $break_left && $B_rend > $break_right) {
-            ## fragment overlaps breakpoint.
 
+            #################################
+            ## fragment overlaps breakpoint.
+            ##################################
+            
             ## determine if it's a spanning pair or a fusion junction.
             if ($A_rend < $break_left && $B_lend > $break_right) {
+
+                ####################
                 ## a spanning pair:
+                ####################
+                
+                my $seq_entropy_aref = $seq_entropy_href->{$target_trans_id} or die "Error, no seq entropy stored for transcript: $target_trans_id";
 
                 #print STDERR "Found spanning fragment for $target_trans_id\n";
-                $fusion_support{$target_trans_id}->{spanning}->{$frag_name}++;
+                if (&average_align_entropy($trans_coords_A_aref, $seq_entropy_aref) >= $MIN_ENTROPY
+                    &&
+                    &average_align_entropy($trans_coords_B_aref, $seq_entropy_aref) >= $MIN_ENTROPY) {
+                    
+                    $fusion_support{$target_trans_id}->{spanning}->{$frag_name}++;
+                }
             }
             else {
+
+                ##########################################################
                 ## see if any alignment overlaps the point of the junction
+                ##########################################################
+
                 foreach my $align_seg (@$trans_coords_A_aref, @$trans_coords_B_aref) {
                     my ($lend, $rend) = @$align_seg;
                     
@@ -354,6 +374,26 @@ sub compute_entropy {
 }
 
 ####
+sub compute_trans_seq_entropy {
+    my ($chim_seqs_href) = @_;
+
+    my %trans_entropy;
+    
+    foreach my $trans_acc (keys %$chim_seqs_href) {
+        my $sequence = $chim_seqs_href->{$trans_acc};
+        
+        for (my $i = 0; $i <= length($sequence) - $ANCHOR; $i++) {
+            my $subseq = substr($sequence, $i, $ANCHOR);
+            my $entropy = &compute_entropy($subseq);
+            $trans_entropy{$trans_acc}->[$i] = $entropy;
+        }
+    }
+
+    return(%trans_entropy);
+}
+
+
+####
 sub minimal_percent_identity {
     my ($sam_entry) = @_;
 
@@ -376,4 +416,26 @@ sub minimal_percent_identity {
 }
                                
             
-          
+####
+sub average_align_entropy {
+    my ($align_coords_aref, $seq_entropy_aref) = @_;
+
+    my @entropies;
+    foreach my $align_seg (@$align_coords_aref) {
+        my ($lend, $rend) = @$align_seg;
+        for (my $i = $lend; $i <= $rend - $ANCHOR; $i++) {
+            push (@entropies, $seq_entropy_aref->[$i]);
+        }
+    }
+
+    my $sum = 0;
+    foreach my $entropy (@entropies) {
+        $sum += $entropy;
+    }
+
+    my $avg_entropy = $sum/scalar(@entropies);
+
+    return($avg_entropy);
+}
+
+
