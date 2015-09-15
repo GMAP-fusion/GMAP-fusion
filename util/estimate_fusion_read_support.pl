@@ -20,7 +20,7 @@ my $left_fq_file = $ARGV[2] or die $usage;
 my $right_fq_file = $ARGV[3] or die $usage;
 
 my $ANCHOR = 12;
-
+my $MIN_PERCENT_IDENTITY = 98;
 
 $trans_fasta = &ensure_full_path($trans_fasta);
 $chims_described = &ensure_full_path($chims_described);
@@ -146,6 +146,11 @@ sub capture_fusion_support {
             print STDERR "error, have unpaired pair... skipping.\n";
             next;
         }
+
+        unless (&minimal_percent_identity($sam_entryA) && &minimal_percent_identity($sam_entryB)) {
+            next; 
+        }
+        
         
         
         my $brkpt_range = $chims_href->{$target_trans_id}->[0]->{brkpt_range}; # brkpt is constant for all annotated entries of this transcript
@@ -348,7 +353,27 @@ sub compute_entropy {
     return($entropy);
 }
 
+####
+sub minimal_percent_identity {
+    my ($sam_entry) = @_;
 
+    my $line = $sam_entry->get_original_line();
+
+    my $seq_len = length($sam_entry->get_sequence());
+    
+    $line =~ /\s+NM:i:(\d+)/ or die "Error, cannot extract num mismatches from $line";
+    my $num_mismatches = $1;
+
+    my $percent_identity = 100 - ($num_mismatches/$seq_len * 100);
+
+    if ($percent_identity > $MIN_PERCENT_IDENTITY) {
+        return(1);
+    }
+    else {
+        return(0);
+    }
+
+}
                                
             
           
