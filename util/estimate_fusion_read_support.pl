@@ -41,8 +41,11 @@ main: {
     
     my $chim_candidates_fasta_filename = basename($chims_described) . ".fasta";
     
-    &extract_chim_candidate_seqs($trans_fasta, $chim_candidates_fasta_filename, \%chims);
+    my %chim_seqs = &extract_chim_candidate_seqs($trans_fasta, $chim_candidates_fasta_filename, \%chims);
     
+    my %chim_brkpt_entropy = &get_breakpoint_region_entropy(\%chims, \%chim_seqs);
+    
+
     my $bowtie2_bam = &align_reads_using_bowtie2($chim_candidates_fasta_filename, $left_fq_file, $right_fq_file);
         
     my %fusion_support = &capture_fusion_support($bowtie2_bam, \%chims);
@@ -74,12 +77,26 @@ main: {
 
         
         my $chim_info_aref = $chims{$target_trans_id};
+
+        my $chim_brkpt_href = $chim_brkpt_entropy{$target_trans_id};
+        
         
         foreach my $chim_info (@$chim_info_aref) {
 
             my $line = $chim_info->{line};
+
+
                     
-            print join("\t", $line, $J, $S, $junction_frag_list, $spanning_frag_list) . "\n";
+            print join("\t", $line, $J, $S, 
+                       
+                       $chim_brkpt_href->{left_brkpt_anchor},
+                       $chim_brkpt_href->{left_brkpt_entropy},
+ 
+                       $chim_brkpt_href->{right_brkpt_anchor},
+                       $chim_brkpt_href->{right_brkpt_entropy},
+                       
+                       $junction_frag_list, 
+                       $spanning_frag_list) . "\n";
         }
     }
     
@@ -194,7 +211,7 @@ sub align_reads_using_bowtie2 {
     $cmd = "bowtie2-build bowtie2_target.fa bowtie2_target > /dev/null";
     $pipeliner->add_commands(new Command($cmd, "bowtie2_target.build.ok"));
 
-    $cmd = "bash -c \"set pipefail -o && bowtie2 -k10 -p 4 --no-mixed --no-discordant --very-fast --local -x bowtie2_target -1 $left_fq_file -2 $right_fq_file "
+    $cmd = "bash -c \"set pipefail -o && bowtie2 -k10 -p 4 --no-mixed --no-discordant --very-fast --end-to-end -x bowtie2_target -1 $left_fq_file -2 $right_fq_file "
         . " | samtools view -F 4 -Sb - | samtools sort -@ 4 - $trans_fasta.bowtie2\"";
     $pipeliner->add_commands(new Command($cmd, "bowtie2_align.ok"));
     
@@ -210,32 +227,31 @@ sub align_reads_using_bowtie2 {
 sub extract_chim_candidate_seqs {
     my ($trans_fasta_filename, $output_filename, $chims_href) = @_;
 
-    my $checkpoint = "$output_filename.ok";
-    if (-e $checkpoint && -s $trans_fasta_filename) {
-        return;
-    }
-    else {
-        my $fasta_reader = new Fasta_reader($trans_fasta_filename);
-        open (my $ofh, ">$output_filename") or die "Error, cannot write to file: $trans_fasta_filename";
+    my %chim_seqs;
+
+    my $fasta_reader = new Fasta_reader($trans_fasta_filename);
+    open (my $ofh, ">$output_filename") or die "Error, cannot write to file: $trans_fasta_filename";
+    
+    while (my $seq_obj = $fasta_reader->next()) {
         
-        while (my $seq_obj = $fasta_reader->next()) {
+        my $accession = $seq_obj->get_accession();
+        
+        if (exists $chims_href->{$accession}) {
             
-            my $accession = $seq_obj->get_accession();
+            my $sequence = $seq_obj->get_sequence();
             
-            if (exists $chims_href->{$accession}) {
-                
-                my $sequence = $seq_obj->get_sequence();
-                
-                print $ofh ">$accession\n$sequence\n";
-            }
+            print $ofh ">$accession\n$sequence\n";
+            
+            $chim_seqs{$accession} = $sequence;
+            
         }
-        
-        close $ofh;
-        
-        &process_cmd("touch $checkpoint");
-        
-        return;
     }
+    
+    close $ofh;
+        
+            
+    return (%chim_seqs);
+    
 }
         
 
@@ -274,6 +290,62 @@ sub parse_chims {
     close $fh;
 
     return(%chims);
+}
+
+
+####
+sub get_breakpoint_region_entropy {
+    my ($chims_href, $seqs_href) = @_;
+
+    my %chim_brkpt_entropy;
+
+    foreach my $acc (keys %$chims_href) {
+        my $brkpt_range = $chims_href->{$acc}->[0]->{brkpt_range};
+        my $sequence = $seqs_href->{$acc};
+
+        my ($left_pt, $right_pt) = sort {$a<=>$b} split(/-/, $brkpt_range);
+        
+        my $left_seq_range = substr($sequence, $left_pt - $ANCHOR, $ANCHOR);
+        my $right_seq_range = substr($sequence, $right_pt+1, $ANCHOR);
+
+        my $left_brkpt_entropy = sprintf("%.2f", &compute_entropy($left_seq_range));
+        my $right_brkpt_entropy = sprintf("%.2f", &compute_entropy($right_seq_range));
+
+        $chim_brkpt_entropy{$acc}->{left_brkpt_entropy} = $left_brkpt_entropy;
+        $chim_brkpt_entropy{$acc}->{right_brkpt_entropy} = $right_brkpt_entropy;
+        
+        $chim_brkpt_entropy{$acc}->{left_brkpt_anchor} = $left_seq_range;
+        $chim_brkpt_entropy{$acc}->{right_brkpt_anchor} = $right_seq_range;
+        
+        
+        
+    }
+
+    return (%chim_brkpt_entropy);
+}
+
+####
+sub compute_entropy {
+    my ($sequence) = @_;
+
+    my @chars = split(//, $sequence);
+    my %char_counter;
+
+    foreach my $char (@chars) {
+        $char_counter{$char}++;
+    }
+    
+    my $num_chars = scalar(@chars);
+
+    my $entropy = 0;
+    foreach my $char (keys %char_counter) {
+        my $count = $char_counter{$char};
+        my $p = $count / $num_chars;
+
+        $entropy += $p * (  log(1/$p) / log(2) );
+    }
+
+    return($entropy);
 }
 
 

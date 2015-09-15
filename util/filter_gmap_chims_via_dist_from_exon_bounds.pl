@@ -11,6 +11,9 @@ my $minJ = $ARGV[1];
 my $minJS = $ARGV[2];
 my $min_novel_J = $ARGV[3];
 
+
+my $MIN_ANCHOR_ENTROPY = 1.5;
+
 unless (defined ($minJ) && defined($minJS) && defined($min_novel_J)) {
     die $usage;
 }
@@ -30,6 +33,9 @@ while (<$fh>) {
     
     my $J = $x[4];
     my $S = $x[5];
+    
+    my $left_brkpt_entropy = $x[7];
+    my $right_brkpt_entropy = $x[8];
     
     
     if ($info ne '.') {
@@ -54,6 +60,11 @@ while (<$fh>) {
                 $record_pass = 1;
             }
         
+            ## but...  if only junction reads, the anchors must meet the min entropy requirement.
+            if ($J > 0 && $S == 0 && ($left_brkpt_entropy < $MIN_ANCHOR_ENTROPY || $right_brkpt_entropy < $MIN_ANCHOR_ENTROPY) ) {
+                $record_pass = 0;
+            }
+            
         }
         else {
             ## only reporting ref-junction entries
