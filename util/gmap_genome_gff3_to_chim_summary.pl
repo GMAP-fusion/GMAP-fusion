@@ -8,6 +8,9 @@ use Getopt::Long qw(:config no_ignore_case bundling pass_through);
 use List::Util qw (min max);
 use Set::IntervalTree;
 
+my $MIN_PER_ID = 98;
+
+
 my $usage = <<__EOUSAGE__;
 
 #####################################################################
@@ -17,6 +20,8 @@ my $usage = <<__EOUSAGE__;
 #  --gmap_gff3 <string>        gmap gff3 alignment output
 #
 #  --annot_gtf <string>        transcript structures in gtf file format.
+#
+#  --min_per_id <float>        minimum percent identity (default: $MIN_PER_ID)
 #
 ######################################################################
 
@@ -33,6 +38,7 @@ my $annot_gtf_file;
 &GetOptions ( 'h' => \$help_flag,
               'gmap_gff3=s' => \$gmap_gff3_file,
               'annot_gtf=s' => \$annot_gtf_file,
+              'min_per_id=f' => \$MIN_PER_ID,
               
               );
 
@@ -171,7 +177,9 @@ main: {
         foreach my $span_id (@span_ids) {
             my $exon_hits_aref = $target_to_aligns{$target}->{$span_id};
             my $span_struct = &convert_to_span($exon_hits_aref);
-            push (@spans, $span_struct);
+            if ($span_struct->{per_id} >= $MIN_PER_ID) {
+                push (@spans, $span_struct);
+            }
         }
         
 
