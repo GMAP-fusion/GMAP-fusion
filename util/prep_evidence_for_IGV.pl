@@ -128,8 +128,8 @@ sub parse_fusion_evidence {
         my $fusion_name = pop @pts;
         $trans_breakpoint_href->{$trans_acc} = "$brkpt\t$fusion_name";
 
-        my $junction_read_list = $x[6];
-        my $spanning_frag_list = $x[7];
+        my $junction_read_list = $x[10];
+        my $spanning_frag_list = $x[11];
         
         
 
