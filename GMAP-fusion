@@ -126,7 +126,7 @@ my $UTILDIR = "$FindBin::RealBin/util";
 main: {
 
 
-    my $pipeliner = new Pipeliner(-verbose => 1);
+    my $pipeliner = new Pipeliner(-verbose => 2);
 
     ####################################################
     # run GMAP to identify potential fusion transcripts

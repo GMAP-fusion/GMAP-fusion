@@ -37,20 +37,24 @@ foreach my $file ($trans_fasta, $chims_described, $left_fq_file, $right_fq_file)
 
 
 main: {
-
+    
     my %chims = &parse_chims($chims_described);
     
     my $chim_candidates_fasta_filename = basename($chims_described) . ".fasta";
     
+    print STDERR "-extracting chim candidate seqs\n";
     my %chim_seqs = &extract_chim_candidate_seqs($trans_fasta, $chim_candidates_fasta_filename, \%chims);
     
+    print STDERR "-geting breakpoint region entropy\n";
     my %chim_brkpt_entropy = &get_breakpoint_region_entropy(\%chims, \%chim_seqs);
     
-
+    print STDERR "-aligning reads using bowtie2\n";
     my $bowtie2_bam = &align_reads_using_bowtie2($chim_candidates_fasta_filename, $left_fq_file, $right_fq_file);
 
+    print STDERR "-computing trans_seq_entropy\n";
     my %trans_seq_entropy = &compute_trans_seq_entropy(\%chim_seqs);
     
+    print STDERR "-capturing fusion support.\n";
     my %fusion_support = &capture_fusion_support($bowtie2_bam, \%chims, \%trans_seq_entropy);
     
     
@@ -156,7 +160,7 @@ sub capture_fusion_support {
         
         
         
-        my $brkpt_range = $chims_href->{$target_trans_id}->[0]->{brkpt_range}; # brkpt is constant for all annotated entries of this transcript
+        my $brkpt_range = $chims_href->{$target_trans_id}->[0]->{brkpt_range} or die "Error, no breakpoint range for transcript: $target_trans_id"; # brkpt is constant for all annotated entries of this transcript
         my ($break_left, $break_right) = split(/-/, $brkpt_range);
 
 
@@ -232,7 +236,7 @@ sub align_reads_using_bowtie2 {
     my $cmd = "ln -sf $trans_fasta bowtie2_target.fa";
     &process_cmd($cmd);
 
-    my $pipeliner = new Pipeliner(-verbose=>1);
+    my $pipeliner = new Pipeliner(-verbose=>2);
     $cmd = "bowtie2-build bowtie2_target.fa bowtie2_target > /dev/null";
     $pipeliner->add_commands(new Command($cmd, "bowtie2_target.build.ok"));
 
