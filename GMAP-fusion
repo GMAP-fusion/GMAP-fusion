@@ -18,6 +18,8 @@ my $GMAP_DB_NAME = "Hg19.fa.gmap";
 
 my $REF_GTF = "${FUSION_ANNOTATOR_LIB}/gencode.v19.annotation.gtf.exons.protein_coding";
 
+my $STAR_FUSION_DIR = $ENV{'STAR_FUSION_DIR'} or die "Error, need STAR_FUSION_DIR env var";
+
 ## end of configuration
 
 my $CPU = 4;
@@ -119,6 +121,11 @@ if ($output_directory) {
     chdir $output_directory or die "Error, cannot cd to $output_directory";
 }
 
+my $intermediates_dir = "gmap_fusion_intermediates_dir";
+unless (-d $intermediates_dir) {
+    mkdir $intermediates_dir or die "Error, cannot mkdir $intermediates_dir";
+}
+
 
 my $UTILDIR = "$FindBin::RealBin/util";
 
@@ -132,10 +139,10 @@ main: {
     # run GMAP to identify potential fusion transcripts
     ####################################################
 
-    my $gmap_output_file = "gmap.map.gff3";
+    my $gmap_output_file = "$intermediates_dir/gmap.map.gff3";
     my $cmd = "gmap -D $GMAP_DB_DIR -d $GMAP_DB_NAME $transcripts_file -f 3 -n 0 -x $MIN_TRANS_LEN_TRY_CHIM -t $CPU  > $gmap_output_file ";
     
-    $pipeliner->add_commands(new Command($cmd, ".${gmap_output_file}.ok"));
+    $pipeliner->add_commands(new Command($cmd, "${gmap_output_file}.ok"));
 
     ###############################
     ## generate initial chim report
@@ -144,7 +151,7 @@ main: {
     my $chims_described_outfile = "$gmap_output_file.chims_described";
     $cmd = "$UTILDIR/gmap_genome_gff3_to_chim_summary.pl --gmap_gff3 $gmap_output_file --annot_gtf $REF_GTF > $chims_described_outfile";
     
-    $pipeliner->add_commands(new Command($cmd, ".${chims_described_outfile}.ok") );
+    $pipeliner->add_commands(new Command($cmd, "${chims_described_outfile}.ok") );
 
 
     if ($left_fq && $right_fq) {
@@ -156,8 +163,8 @@ main: {
         my $chims_described_plus_read_support = "$chims_described_outfile.w_read_support";
         
         $cmd = "$UTILDIR/estimate_fusion_read_support.pl $transcripts_file $chims_described_outfile $left_fq $right_fq > $chims_described_plus_read_support";
-        $pipeliner->add_commands(new Command($cmd, ".${chims_described_plus_read_support}.ok"));
-
+        $pipeliner->add_commands(new Command($cmd, "${chims_described_plus_read_support}.ok"));
+        
         $chims_described_outfile = $chims_described_plus_read_support;
     }
     
@@ -169,18 +176,19 @@ main: {
     my $chims_filt_outfile = "$chims_described_outfile.J${MIN_J}.JS${MIN_SUM_JS}.NJ${MIN_NOVEL_J}";
     $cmd = "$UTILDIR/filter_gmap_chims_via_dist_from_exon_bounds.pl $chims_described_outfile $MIN_J $MIN_SUM_JS $MIN_NOVEL_J > $chims_filt_outfile";
     
-    $pipeliner->add_commands(new Command($cmd, ".${chims_filt_outfile}.ok") );
+    $pipeliner->add_commands(new Command($cmd, "${chims_filt_outfile}.ok") );
 
     ###############################################
     ## annotate the fusions, make a prettier report
     ###############################################
     
-    my $annotation_report_file = "GMAP-Fusion.report.xls";
-    $cmd = "$UTILDIR/write_GMAP_Fusion_annot_report.pl $chims_filt_outfile > $annotation_report_file";
+    my $preliminary_report_file = "$chims_filt_outfile.preliminary";
+    $cmd = "$UTILDIR/write_GMAP_Fusion_annot_report.pl $chims_filt_outfile > $preliminary_report_file";
     
-    $pipeliner->add_commands(new Command($cmd, ".${annotation_report_file}.ok"));
+    $pipeliner->add_commands(new Command($cmd, "${preliminary_report_file}.ok"));
     
-
+    $cmd = "$STAR_FUSION_DIR/util/blast_and_promiscuity_filter.pl --fusion_preds $preliminary_report_file --out_prefix GMAP-fusion";
+    $pipeliner->add_commands(new Command($cmd, "$intermediates_dir/GMAP-fusion.ok"));
     
 
     $pipeliner->run();

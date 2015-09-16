@@ -13,7 +13,11 @@ my $usage = "usage: $0 gmap.map.gff3.chims_described.w_read_support\n\n";
 my $chim_file = $ARGV[0] or die $usage;
 
 main: {
-
+    
+    print join("\t", "#fusion_name", "J", "S", "trans_acc", "trans_brkpt", 
+               "geneA", "chrA", "coordA", 
+               "geneB", "chrB", "coordB", "junction_type") . "\n";
+    
     open (my $fh, $chim_file) or die "Error, cannot open file $chim_file";
     while (<$fh>) {
         if (/^\#/) { next; }
@@ -40,9 +44,9 @@ main: {
         
         my ($junction_type) = ($deltaA != 0 || $deltaB != 0) ? "INCL_NON_REF_SPLICE" : "ONLY_REF_SPLICE";
         
-        print join("\t", $fusion_name, $trinity_acc, $trans_brkpt, 
+        print join("\t", $fusion_name, $J, $S, $trinity_acc, $trans_brkpt, 
                    $geneA, $chrA, $coordA, $geneB, $chrB, $coordB, 
-                   $J, $S, $junction_type) . "\n";
+                   $junction_type) . "\n";
     }
     
     close $fh;

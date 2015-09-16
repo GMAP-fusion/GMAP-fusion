@@ -40,7 +40,7 @@ main: {
     
     my %chims = &parse_chims($chims_described);
     
-    my $chim_candidates_fasta_filename = basename($chims_described) . ".fasta";
+    my $chim_candidates_fasta_filename = $chims_described . ".fasta";
     
     print STDERR "-extracting chim candidate seqs\n";
     my %chim_seqs = &extract_chim_candidate_seqs($trans_fasta, $chim_candidates_fasta_filename, \%chims);
@@ -239,16 +239,19 @@ sub capture_fusion_support {
 sub align_reads_using_bowtie2 {
     my ($trans_fasta, $left_fq_file, $right_fq_file) = @_;
 
-    my $cmd = "ln -sf $trans_fasta bowtie2_target.fa";
+    my $trans_dirname = dirname($trans_fasta);
+    my $bowtie2_target = "$trans_dirname/bowtie2_target";
+    
+    my $cmd = "ln -sf $trans_fasta $bowtie2_target.fa";
     &process_cmd($cmd);
 
     my $pipeliner = new Pipeliner(-verbose=>2);
-    $cmd = "bowtie2-build bowtie2_target.fa bowtie2_target > /dev/null";
-    $pipeliner->add_commands(new Command($cmd, "bowtie2_target.build.ok"));
+    $cmd = "bowtie2-build $bowtie2_target.fa $bowtie2_target > /dev/null";
+    $pipeliner->add_commands(new Command($cmd, "$bowtie2_target.build.ok"));
 
-    $cmd = "bash -c \"set pipefail -o && bowtie2 -k10 -p 4 --no-mixed --no-discordant --very-fast --end-to-end -x bowtie2_target -1 $left_fq_file -2 $right_fq_file "
+    $cmd = "bash -c \"set pipefail -o && bowtie2 -k10 -p 4 --no-mixed --no-discordant --very-fast --end-to-end -x $bowtie2_target -1 $left_fq_file -2 $right_fq_file "
         . " | samtools view -F 4 -Sb - | samtools sort -@ 4 - $trans_fasta.bowtie2\"";
-    $pipeliner->add_commands(new Command($cmd, "bowtie2_align.ok"));
+    $pipeliner->add_commands(new Command($cmd, "$trans_dirname/bowtie2_align.ok"));
     
     $pipeliner->run();
     
