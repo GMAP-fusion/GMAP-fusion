@@ -150,7 +150,13 @@ sub capture_fusion_support {
         
 
         unless ($sam_entryA->is_first_in_pair() xor $sam_entryB->is_first_in_pair()) {
-            print STDERR "error, have unpaired pair... skipping.\n";
+            #print STDERR "error, have unpaired pair... skipping.\n";
+            #print STDERR $sam_entryA->get_original_line() . "\n";
+            #print STDERR $sam_entryB->get_original_line() . "\n";
+            #print STDERR "\n";
+           
+            # note, there are some cases of multimapping pairs at the same gene (repetitive regions), ignore these too...
+
             next;
         }
 
