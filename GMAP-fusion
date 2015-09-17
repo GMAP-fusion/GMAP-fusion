@@ -29,6 +29,9 @@ my $MIN_NOVEL_J = 3;
 my $MIN_J = 1;
 my $MIN_SUM_JS = 2;
 
+my $SPLIT_BREAKPOINT_EXTEND_LENGTH = 25;
+my $MAX_FUZZY_OVERLAP = 12;
+
 
 my $usage = <<__EOUSAGE__;
 
@@ -55,6 +58,11 @@ my $usage = <<__EOUSAGE__;
 #
 #  --min_novel_junction_support <int>   :minimum number of junction reads required for novel (non-reference) exon-exon junction support.
 #                                        (default: $MIN_NOVEL_J)
+#  --split_breakpint_extend_length <int>   :in assessing breakpoint quality, the length to extend each split sequence beyond
+#                                           the proposed breakpoint. (default: $SPLIT_BREAKPOINT_EXTEND_LENGTH)
+#
+#  --max_fuzzy_overlap <int>               :maximum allowed overlap of extended length from breakpoint (default: $MAX_FUZZY_OVERLAP)
+#
 #
 ##############################################################################################################
 
@@ -89,7 +97,9 @@ my $DEBUG = 0;
               'left_fq=s' => \$left_fq,
               'right_fq=s' => \$right_fq,
  
-              
+              'split_breakpoint_extend_length=i' => \$SPLIT_BREAKPOINT_EXTEND_LENGTH,
+
+              'max_fuzzy_overlap=i' => \$MAX_FUZZY_OVERLAP,
 );
 
 
@@ -152,6 +162,25 @@ main: {
     $cmd = "$UTILDIR/gmap_genome_gff3_to_chim_summary.pl --gmap_gff3 $gmap_output_file --annot_gtf $REF_GTF > $chims_described_outfile";
     
     $pipeliner->add_commands(new Command($cmd, "${chims_described_outfile}.ok") );
+    
+    my $chim_candidates_fasta = "$chims_described_outfile.fasta";
+    $cmd = "$UTILDIR/retrieve_fusion_transcript_candidates.pl $transcripts_file $chims_described_outfile > $chim_candidates_fasta";
+    $pipeliner->add_commands(new Command($cmd, "$chim_candidates_fasta.ok"));
+
+    my $chim_split_gmap_gff3_file = "$chim_candidates_fasta.split.fa.gmap.gff3";
+    $cmd = "$UTILDIR/split_fusion_gmap_parts.pl $chims_described_outfile $chim_candidates_fasta $SPLIT_BREAKPOINT_EXTEND_LENGTH";
+    $pipeliner->add_commands(new Command($cmd, "$chim_split_gmap_gff3_file.ok"));
+
+    my $split_align_stats = "$chim_candidates_fasta.split_align_stats";
+    $cmd = "$UTILDIR/compare_fusion_align_to_best_nonfusion_align.pl $chims_described_outfile $chim_split_gmap_gff3_file $SPLIT_BREAKPOINT_EXTEND_LENGTH > $split_align_stats";
+    $pipeliner->add_commands(new Command($cmd, "$split_align_stats.ok"));
+    
+    
+    my $revised_chims_described_file = "$chims_described_outfile.revised";
+    $cmd = "$UTILDIR/revise_chim_candidate_list_via_split_align_reassessment.pl $split_align_stats $MAX_FUZZY_OVERLAP > $revised_chims_described_file";
+    $pipeliner->add_commands(new Command($cmd, "$revised_chims_described_file.ok"));
+    
+    $chims_described_outfile = $revised_chims_described_file; # replacement
 
 
     if ($left_fq && $right_fq) {
@@ -165,7 +194,10 @@ main: {
         $cmd = "$UTILDIR/estimate_fusion_read_support.pl $transcripts_file $chims_described_outfile $left_fq $right_fq > $chims_described_plus_read_support";
         $pipeliner->add_commands(new Command($cmd, "${chims_described_plus_read_support}.ok"));
         
-        $chims_described_outfile = $chims_described_plus_read_support;
+        $chims_described_outfile = $chims_described_plus_read_support; #replacement
+
+        
+
     }
     
     
