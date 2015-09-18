@@ -55,7 +55,7 @@ main: {
     my $cmd = "gmap -D $GMAP_DB_DIR -d $GMAP_DB_NAME $chim_frag_file -f 3 -n 1 -t 4 --min-identity 0.98 > $gmap_output_file";
     
     my $pipeliner = new Pipeliner(-verbose => 1);
-    $pipeliner->add_commands(new Command($cmd, "gmap_output_file.ok"));
+    $pipeliner->add_commands(new Command($cmd, "$gmap_output_file.ok"));
 
     $pipeliner->run();
     
