@@ -11,16 +11,6 @@ use __GLOBALS__;
 use Pipeliner;
 use Process_cmd;
 
-## configuration:
-my $GENOME = "${FUSION_ANNOTATOR_LIB}/Hg19.fa";
-my $GMAP_DB_DIR = "${FUSION_ANNOTATOR_LIB}";
-my $GMAP_DB_NAME = "Hg19.fa.gmap";
-
-my $REF_GTF = "${FUSION_ANNOTATOR_LIB}/gencode.v19.annotation.gtf.exons.protein_coding";
-
-my $STAR_FUSION_DIR = $ENV{'STAR_FUSION_DIR'} or die "Error, need STAR_FUSION_DIR env var";
-
-## end of configuration
 
 my $CPU = 4;
 my $MIN_TRANS_LEN_TRY_CHIM = 30;
@@ -32,6 +22,10 @@ my $MIN_SUM_JS = 2;
 my $SPLIT_BREAKPOINT_EXTEND_LENGTH = 25;
 my $MAX_FUZZY_OVERLAP = 12;
 
+my $Evalue = 1e-3;
+my $MAX_PROMISCUITY = 3;  # perhaps a poor choice of words, but still a best fit IMHO.
+
+
 
 my $usage = <<__EOUSAGE__;
 
@@ -40,6 +34,8 @@ my $usage = <<__EOUSAGE__;
 #  Required:
 #
 #  --transcripts|T <string>        :transcript fasta file
+#
+#  --genome_lib_dir <string>             directory containing genome lib (see http://FusionFilter.github.io for details)
 #
 #  Optional:
 #
@@ -58,13 +54,17 @@ my $usage = <<__EOUSAGE__;
 #
 #  --min_novel_junction_support <int>   :minimum number of junction reads required for novel (non-reference) exon-exon junction support.
 #                                        (default: $MIN_NOVEL_J)
-#  --split_breakpint_extend_length <int>   :in assessing breakpoint quality, the length to extend each split sequence beyond
+#  --split_breakpoint_extend_length <int>   :in assessing breakpoint quality, the length to extend each split sequence beyond
 #                                           the proposed breakpoint. (default: $SPLIT_BREAKPOINT_EXTEND_LENGTH)
 #
 #  --max_fuzzy_overlap <int>               :maximum allowed overlap of extended length from breakpoint (default: $MAX_FUZZY_OVERLAP)
 #
+#  --max_promiscuity <int>               maximum number of partners allowed for a given fusion. Default: $MAX_PROMISCUITY
+#
+#  -E <float>                            E-value threshold for blast searches (default: 0.001)
 #
 ##############################################################################################################
+
 
 
 __EOUSAGE__
@@ -79,8 +79,12 @@ my $left_fq;
 my $right_fq;
 
 my $DEBUG = 0;
+my $genome_lib_dir;
+
 
 &GetOptions ( 'help|h' => \$help_flag,
+              
+              'genome_lib_dir=s' => \$genome_lib_dir,
               
               'transcripts|T=s' => \$transcripts_file,
               
@@ -100,6 +104,11 @@ my $DEBUG = 0;
               'split_breakpoint_extend_length=i' => \$SPLIT_BREAKPOINT_EXTEND_LENGTH,
 
               'max_fuzzy_overlap=i' => \$MAX_FUZZY_OVERLAP,
+              
+              'E=f' => \$Evalue,
+              'genome_lib_dir=s' => \$genome_lib_dir,
+              
+
 );
 
 
@@ -108,7 +117,7 @@ if ($help_flag) {
     die $usage;
 }
 
-unless ($transcripts_file) {
+unless ($transcripts_file && $genome_lib_dir) {
     die $usage;
 }
 
@@ -138,6 +147,16 @@ unless (-d $intermediates_dir) {
 
 
 my $UTILDIR = "$FindBin::RealBin/util";
+
+my $GMAP_DB_DIR = $genome_lib_dir;
+my $GMAP_DB_NAME = "ref_genome.fa.gmap";
+unless (-d "$GMAP_DB_DIR/$GMAP_DB_NAME") {
+    die "Error, cannot locate gmap database: $GMAP_DB_DIR/$GMAP_DB_NAME";
+}
+my $REF_GTF = "$genome_lib_dir/ref_annot.gtf.gz";
+unless (-s $REF_GTF) {
+    die "Error, cannot locate reference annotation file: $REF_GTF";
+}
 
 
 main: {
@@ -219,10 +238,9 @@ main: {
     
     $pipeliner->add_commands(new Command($cmd, "${preliminary_report_file}.ok"));
     
-    $cmd = "$STAR_FUSION_DIR/util/blast_and_promiscuity_filter.pl --fusion_preds $preliminary_report_file --out_prefix GMAP-fusion";
+    $cmd = "$FindBin::Bin/FusionFilter/util/blast_and_promiscuity_filter.pl --fusion_preds $preliminary_report_file --out_prefix GMAP-fusion --genome_lib_dir $genome_lib_dir";
     $pipeliner->add_commands(new Command($cmd, "$intermediates_dir/GMAP-fusion.ok"));
     
-
     $pipeliner->run();
     
     exit(0); ### stopping here now.

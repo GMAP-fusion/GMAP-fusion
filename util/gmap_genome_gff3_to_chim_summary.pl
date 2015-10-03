@@ -60,7 +60,14 @@ main: {
 
     my %chr_to_gene_coords;
     print STDERR "-parsing $annot_gtf_file\n";
-    open (my $fh, $annot_gtf_file) or die "Error, cannot open file $annot_gtf_file";
+    my $fh;
+    if ($annot_gtf_file =~ /\.gz$/) {
+        open ($fh, "gunzip -c $annot_gtf_file | ") or die "Error, cannot open file gunzip -c $annot_gtf_file";
+    }
+    else {
+        open ($fh, $annot_gtf_file) or die "Error, cannot open file $annot_gtf_file";
+    }
+    
     while (<$fh>) {
         chomp;
         unless (/\w/) { next; }
