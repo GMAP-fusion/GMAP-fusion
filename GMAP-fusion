@@ -153,7 +153,7 @@ my $GMAP_DB_NAME = "ref_genome.fa.gmap";
 unless (-d "$GMAP_DB_DIR/$GMAP_DB_NAME") {
     die "Error, cannot locate gmap database: $GMAP_DB_DIR/$GMAP_DB_NAME";
 }
-my $REF_GTF = "$genome_lib_dir/ref_annot.gtf.gz";
+my $REF_GTF = "$genome_lib_dir/ref_annot.gtf";
 unless (-s $REF_GTF) {
     die "Error, cannot locate reference annotation file: $REF_GTF";
 }
@@ -238,10 +238,13 @@ main: {
     
     $pipeliner->add_commands(new Command($cmd, "${preliminary_report_file}.ok"));
     
-    $cmd = "$FindBin::Bin/FusionFilter/util/blast_and_promiscuity_filter.pl --fusion_preds $preliminary_report_file --out_prefix GMAP-fusion --genome_lib_dir $genome_lib_dir";
+    $cmd = "$FindBin::Bin/FusionFilter/blast_and_promiscuity_filter.pl --fusion_preds $preliminary_report_file --out_prefix GMAP-fusion --genome_lib_dir $genome_lib_dir";
     $pipeliner->add_commands(new Command($cmd, "$intermediates_dir/GMAP-fusion.ok"));
     
     $pipeliner->run();
+
+
+    print STDERR "\n\n\tDone. See fusion predictions at: $output_directory/GMAP-fusion.final\n\n\n";
     
     exit(0); ### stopping here now.
     
