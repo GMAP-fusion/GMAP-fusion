@@ -2,11 +2,6 @@
 
 use strict;
 use warnings;
-use FindBin;
-use lib ("$FindBin::Bin/../PerlLib");
-
-use __GLOBALS__;
-use FusionAnnotator;
 
 my $usage = "usage: $0 gmap.map.gff3.chims_described.w_read_support\n\n";
 

@@ -8,17 +8,17 @@ use lib ("$FindBin::Bin/../PerlLib");
 use Fasta_reader;
 use Pipeliner;
 
-my $usage = "\n\n\tusage: $0 gmap.map.gff3.chims_described gmap.map.gff3.chims_described.fasta EXTEND_LENGTH\n\n";
+my $usage = "\n\n\tusage: $0 gmap.map.gff3.chims_described gmap.map.gff3.chims_described.fasta EXTEND_LENGTH genome_lib_dir\n\n";
 
 my $chims_described_file = $ARGV[0] or die $usage;
 my $chims_fasta_file = $ARGV[1] or die $usage;
 my $EXTEND = $ARGV[2] or die $usage;
+my $genome_lib_dir = $ARGV[3] or die $usage;
 
 ## configuration:
-my $FUSION_ANNOTATOR_LIB = $ENV{FUSION_ANNOTATOR_LIB} or die "Error, must specify env var FUSION_ANNOTATOR_LIB";
-my $GENOME = "${FUSION_ANNOTATOR_LIB}/Hg19.fa";
-my $GMAP_DB_DIR = "${FUSION_ANNOTATOR_LIB}";
-my $GMAP_DB_NAME = "Hg19.fa.gmap";
+my $GENOME = "$genome_lib_dir/ref_genome.fa";
+my $GMAP_DB_DIR = "$genome_lib_dir";
+my $GMAP_DB_NAME = "ref_genome.fa.gmap";
 
 
 main: {

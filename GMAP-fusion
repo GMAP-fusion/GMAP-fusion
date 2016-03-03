@@ -187,7 +187,7 @@ main: {
     $pipeliner->add_commands(new Command($cmd, "$chim_candidates_fasta.ok"));
 
     my $chim_split_gmap_gff3_file = "$chim_candidates_fasta.split.fa.gmap.gff3";
-    $cmd = "$UTILDIR/split_fusion_gmap_parts.pl $chims_described_outfile $chim_candidates_fasta $SPLIT_BREAKPOINT_EXTEND_LENGTH";
+    $cmd = "$UTILDIR/split_fusion_gmap_parts.pl $chims_described_outfile $chim_candidates_fasta $SPLIT_BREAKPOINT_EXTEND_LENGTH $genome_lib_dir";
     $pipeliner->add_commands(new Command($cmd, "$chim_split_gmap_gff3_file.ok"));
 
     my $split_align_stats = "$chim_candidates_fasta.split_align_stats";
@@ -230,9 +230,9 @@ main: {
     $pipeliner->add_commands(new Command($cmd, "${chims_filt_outfile}.ok") );
 
     ###############################################
-    ## annotate the fusions, make a prettier report
+    ## FusionFilter
     ###############################################
-    
+
     my $preliminary_report_file = "$chims_filt_outfile.preliminary";
     $cmd = "$UTILDIR/write_GMAP_Fusion_annot_report.pl $chims_filt_outfile > $preliminary_report_file";
     
@@ -240,9 +240,10 @@ main: {
     
     $cmd = "$FindBin::Bin/FusionFilter/blast_and_promiscuity_filter.pl --fusion_preds $preliminary_report_file --out_prefix GMAP-fusion --genome_lib_dir $genome_lib_dir";
     $pipeliner->add_commands(new Command($cmd, "$intermediates_dir/GMAP-fusion.ok"));
-    
-    $pipeliner->run();
 
+
+    $pipeliner->run();
+    
 
     print STDERR "\n\n\tDone. See fusion predictions at: $output_directory/GMAP-fusion.final\n\n\n";
     
