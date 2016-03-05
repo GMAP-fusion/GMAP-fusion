@@ -1,0 +1,6 @@
+## GMAP-fusion v0.1.0 (Mar 5, 2016)
+Updated to FusionFilter v0.1.0
+
+
+## GMAP-fusion v0.0.1 (Oct 30, 2015)
+initial release

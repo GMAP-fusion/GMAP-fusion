@@ -11,6 +11,8 @@ use __GLOBALS__;
 use Pipeliner;
 use Process_cmd;
 
+my $VERSION = "v0.1.0";
+
 
 my $CPU = 4;
 my $MIN_TRANS_LEN_TRY_CHIM = 30;
@@ -63,6 +65,8 @@ my $usage = <<__EOUSAGE__;
 #
 #  -E <float>                            E-value threshold for blast searches (default: 0.001)
 #
+#  --version                             report version ($VERSION)
+#
 ##############################################################################################################
 
 
@@ -81,6 +85,7 @@ my $right_fq;
 my $DEBUG = 0;
 my $genome_lib_dir;
 
+my $SHOW_VERSION = 0;
 
 &GetOptions ( 'help|h' => \$help_flag,
               
@@ -108,7 +113,8 @@ my $genome_lib_dir;
               'E=f' => \$Evalue,
               'genome_lib_dir=s' => \$genome_lib_dir,
               
-
+              'version' => \$SHOW_VERSION,
+              
 );
 
 
@@ -116,6 +122,12 @@ my $genome_lib_dir;
 if ($help_flag) {
     die $usage;
 }
+
+if ($SHOW_VERSION) {
+    print "\n\nGMAP-fusion $VERSION\n\n";
+    exit(0);
+}
+
 
 unless ($transcripts_file && $genome_lib_dir) {
     die $usage;
