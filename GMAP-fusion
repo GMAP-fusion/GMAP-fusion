@@ -11,7 +11,7 @@ use __GLOBALS__;
 use Pipeliner;
 use Process_cmd;
 
-my $VERSION = "v0.1.0";
+my $VERSION = "v0.2.0";
 
 
 my $CPU = 4;
