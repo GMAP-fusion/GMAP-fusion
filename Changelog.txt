@@ -1,3 +1,6 @@
+## GMAP-fusion v0.2.0 (July 29, 2016)
+Updated FusionFilter, better tackles overlapping genes in reference annotation
+
 ## GMAP-fusion v0.1.0 (Mar 5, 2016)
 Updated to FusionFilter v0.1.0
 
