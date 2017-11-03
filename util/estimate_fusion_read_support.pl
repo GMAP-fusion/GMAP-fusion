@@ -250,7 +250,7 @@ sub align_reads_using_bowtie2 {
     $pipeliner->add_commands(new Command($cmd, "$bowtie2_target.build.ok"));
 
     $cmd = "bash -c \"set pipefail -o && bowtie2 -k10 -p 4 --no-mixed --no-discordant --very-fast --end-to-end -x $bowtie2_target -1 $left_fq_file -2 $right_fq_file "
-        . " | samtools view -F 4 -Sb - | samtools sort -@ 4 - $trans_fasta.bowtie2\"";
+        . " | samtools view -F 4 -Sb - | samtools sort -@ 4 -o $trans_fasta.bowtie2.bam\"";
     $pipeliner->add_commands(new Command($cmd, "$trans_dirname/bowtie2_align.ok"));
     
     $pipeliner->run();

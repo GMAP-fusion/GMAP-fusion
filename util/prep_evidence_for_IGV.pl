@@ -90,13 +90,13 @@ sub write_fusion_evidence_bams {
     
     ## convert to coord-sorted bam files.
     
-    my $cmd = "samtools view -T $chims_fasta -Sb $junction_frags_sam_file | samtools sort - $junction_frags_sam_file.csorted";
+    my $cmd = "samtools view -T $chims_fasta -Sb $junction_frags_sam_file | samtools sort -o $junction_frags_sam_file.csorted.bam";
     &process_cmd($cmd);
     
     &process_cmd("samtools index $junction_frags_sam_file.csorted.bam");
 
 
-    $cmd =  "samtools view -T $chims_fasta -Sb $spanning_frags_sam_file | samtools sort - $spanning_frags_sam_file.csorted"; 
+    $cmd =  "samtools view -T $chims_fasta -Sb $spanning_frags_sam_file | samtools sort -o $spanning_frags_sam_file.csorted.bam"; 
     &process_cmd($cmd);
     
     &process_cmd("samtools index $spanning_frags_sam_file.csorted.bam");
