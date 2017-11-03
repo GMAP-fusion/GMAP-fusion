@@ -1,3 +1,8 @@
+## GMAP-fusion v0.3.0 (Nov 3, 2017)
+-removed any Trinity installation requirements
+-uses samtools v1.3 or greater
+
+
 ## GMAP-fusion v0.2.0 (July 29, 2016)
 Updated FusionFilter, better tackles overlapping genes in reference annotation
 
