@@ -132,6 +132,7 @@ unless ($transcripts_file && $genome_lib_dir) {
     die $usage;
 }
 
+$genome_lib_dir = &ensure_full_path($genome_lib_dir);
 
 $transcripts_file = &ensure_full_path($transcripts_file);
 if ($left_fq) {
@@ -151,7 +152,7 @@ if ($output_directory) {
     chdir $output_directory or die "Error, cannot cd to $output_directory";
 }
 
-my $intermediates_dir = "gmap_fusion_intermediates_dir";
+my $intermediates_dir = &ensure_full_path("gmap_fusion_intermediates_dir");
 unless (-d $intermediates_dir) {
     mkdir $intermediates_dir or die "Error, cannot mkdir $intermediates_dir";
 }
@@ -225,9 +226,7 @@ main: {
         $pipeliner->add_commands(new Command($cmd, "${chims_described_plus_read_support}.ok"));
         
         $chims_described_outfile = $chims_described_plus_read_support; #replacement
-
-        
-
+    
     }
     
     
