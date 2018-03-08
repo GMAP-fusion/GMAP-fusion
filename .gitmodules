@@ -4,3 +4,6 @@
 [submodule "GMAP-fusion.wiki"]
 	path = GMAP-fusion.wiki
 	url = https://github.com/GMAP-fusion/GMAP-fusion.wiki.git
+[submodule "DISCASM"]
+	path = DISCASM
+	url = git@github.com:DISCASM/DISCASM.git
