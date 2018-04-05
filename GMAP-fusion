@@ -147,6 +147,7 @@ if ($right_fq) {
 
 
 if ($output_directory) {
+    $output_directory = &ensure_full_path($output_directory);
     
     unless (-d $output_directory) {
         mkdir $output_directory or die "Error, cannot mkdir $output_directory";
@@ -232,7 +233,7 @@ main: {
     #############################################################
     ## filter the chimeras based on distance from exon junctions:
     #############################################################
-
+    
     my $chims_filt_outfile = "$chims_described_outfile.J${MIN_J}.JS${MIN_SUM_JS}.NJ${MIN_NOVEL_J}";
     $cmd = "$UTILDIR/filter_gmap_chims_via_dist_from_exon_bounds.pl $chims_described_outfile $MIN_J $MIN_SUM_JS $MIN_NOVEL_J > $chims_filt_outfile";
     
@@ -262,12 +263,17 @@ main: {
     
     $cmd = "$FindBin::Bin/FusionFilter/util/filter_by_annotation_rules.pl --fusions  $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot --genome_lib_dir $genome_lib_dir";
     $pipeliner->add_commands(new Command($cmd, "filter_by_annot_rules.ok"));
+
+
+    $cmd = "cp $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot.pass $output_directory/GMAP-fusion.fusion_predictions.tsv";
+    $pipeliner->add_commands(new Command($cmd, "copy_final_predictions_to_deliverable.ok"));
+
     
     
     $pipeliner->run();
     
 
-    print STDERR "\n\n\tDone. See fusion predictions at: $output_directory/GMAP-fusion.final\n\n\n";
+    print STDERR "\n\n\tDone. See fusion predictions at: $output_directory/GMAP-fusion.fusion_predictions.tsv\n\n\n";
     
     exit(0); ### stopping here now.
     
