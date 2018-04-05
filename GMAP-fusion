@@ -246,10 +246,19 @@ main: {
     
     $pipeliner->add_commands(new Command($cmd, "${preliminary_report_file}.ok"));
     
-    $cmd = "$FindBin::Bin/FusionFilter/blast_and_promiscuity_filter.pl --fusion_preds $preliminary_report_file --out_prefix GMAP-fusion --genome_lib_dir $genome_lib_dir";
-    $pipeliner->add_commands(new Command($cmd, "$intermediates_dir/GMAP-fusion.ok"));
+    $cmd = "$FindBin::Bin/FusionFilter/blast_and_promiscuity_filter.pl --fusion_preds $preliminary_report_file --out_prefix $preliminary_report_file --genome_lib_dir $genome_lib_dir";
+    $pipeliner->add_commands(new Command($cmd, "$intermediates_dir/blast_promisc_filter.ok"));
 
 
+
+    #################################
+    ## Fusion Annotator
+    #################################
+    
+    $cmd = "$FindBin::Bin/FusionFilter/filter_by_annotation_rules.pl --fusions  $preliminary_report_file.post_blast_and_promiscuity_filter --genome_lib_dir $genome_lib_dir";
+    
+    
+    
     $pipeliner->run();
     
 
