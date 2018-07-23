@@ -1,0 +1,55 @@
+<tool id="ctat_gmap_fusion" name="ctat_gmap_fusion" version="1.0.0" profile="17.05">
+    <description>Fusion-finding Using De novo RNA-Seq Transcript Assemblies</description>
+    <requirements>
+        <requirement type="package" version="0.4.0">gmap-fusion</requirement>
+    </requirements>
+    <command detect_errors="default">
+      GMAP-fusion 
+      -T $assembled_trans 
+      --left_fq $left_input
+      --right_fq $right_input
+      --genome_lib_dir "${genome_resource_lib.fields.path}"
+      --output "subdir" 
+    </command>
+    <stdio>
+      <exit_code range="1:"  level="fatal"   description="Error returned from pipeline" />
+    </stdio>
+    <regex match="Must investigate error above."
+           source="stderr"
+           level="fatal"
+           description="Unknown error encountered" />
+    <inputs>
+      <param format="fasta" name="assembled_trans" type="data" label="Assembled Transcripts (ie. Trinity or DISCASM output)" help="Trinity or DISCASM generated transcript fasta"/>
+      <param format="fastq" name="left_input" type="data" label="Left/Forward strand reads" help="Forward strand reads"/>
+      <param format="fastq" name="right_input" type="data" label="Right/Reverse strand reads" help="Reverse strand reads"/>
+      <param name="genome_resource_lib" type="select" label="Select a reference genome">
+        <options from_data_table="ctat_genome_resource_libs">
+          <filter type="sort_by" column="2" />
+          <validator type="no_options" message="No indexes are available" />
+        </options>
+      </param>
+    </inputs>
+    <outputs>
+      <data format="tabular" name="gmapfusion_candidates" label="${tool.name} on ${on_string}: GMAP-fusion candidates" from_work_dir="subdir/GMAP-fusion.final"/>
+    </outputs>
+
+    <tests>
+      <test>
+        <param name="left_input" value="GMAP/reads_1.fq.gz" />
+        <param name="right_input" value="GMAP/reads_2.fq.gz" />
+        <param name="assembled_trans" value="GMAP/transcripts.fa" />
+        <!-- FIX - now that we added the CTAT ref lib path as a parameter, how do we find it for testing?
+        <param name="genome_resource_lib.fields.path" value="?????" />
+        -->
+        <output name="gmapfusion_candidates" file="GMAP/fusion.reads_1_2.final" />
+      </test>
+    </tests>
+
+    <help>
+.. class:: infomark
+
+GMAP-fusion is a utility for identifying candidate fusion transcripts based on transcript sequences reconstructed via RNA-Seq de novo transcriptome assembly.  Please read more here_.
+
+.. _here: https://github.com/GMAP-fusion/GMAP-fusion/wiki
+    </help>
+</tool>
