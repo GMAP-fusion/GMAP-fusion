@@ -23,10 +23,6 @@ my $MIN_SUM_JS = 2;
 my $SPLIT_BREAKPOINT_EXTEND_LENGTH = 25;
 my $MAX_FUZZY_OVERLAP = 12;
 
-my $Evalue = 1e-3;
-my $MAX_PROMISCUITY = 3;  # perhaps a poor choice of words, but still a best fit IMHO.
-
-
 
 my $usage = <<__EOUSAGE__;
 
@@ -62,7 +58,6 @@ my $usage = <<__EOUSAGE__;
 #
 #  --max_fuzzy_overlap <int>               :maximum allowed overlap of extended length from breakpoint (default: $MAX_FUZZY_OVERLAP)
 #
-#  --max_promiscuity <int>               maximum number of partners allowed for a given fusion. Default: $MAX_PROMISCUITY
 #
 #  -E <float>                            E-value threshold for blast searches (default: 0.001)
 #
@@ -111,7 +106,6 @@ my $SHOW_VERSION = 0;
 
               'max_fuzzy_overlap=i' => \$MAX_FUZZY_OVERLAP,
               
-              'E=f' => \$Evalue,
               'genome_lib_dir=s' => \$genome_lib_dir,
               
               'version' => \$SHOW_VERSION,
