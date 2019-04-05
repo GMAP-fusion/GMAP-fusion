@@ -6,7 +6,7 @@
 	url = https://github.com/GMAP-fusion/GMAP-fusion.wiki.git
 [submodule "DISCASM"]
 	path = DISCASM
-	url = git@github.com:DISCASM/DISCASM.git
+	url = https://github.com/DISCASM/DISCASM.git
 [submodule "FusionAnnotator"]
 	path = FusionAnnotator
 	url = https://github.com/FusionAnnotator/FusionAnnotator.git
