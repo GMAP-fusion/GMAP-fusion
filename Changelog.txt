@@ -1,3 +1,16 @@
+## GMAP-fusion v0.4.1 (Apri 5, 2019)
+-patch release, updated submodules
+-including Docker
+
+## GMAP-fusion v0.4.0 (Mar 9, 2018)
+-Now includes DISCASM as a submodule.
+-Requires short reads with reconstruted trnascripts for quantification of fusion support.
+-Tutorial with sample data now available: https://github.com/DISCASM/DISCASM-Tutorial
+
+-be sure to use with GMAP version 2017-11-15:
+http://research-pub.gene.com/gmap/src/gmap-gsnap-2017-11-15.tar.gz
+
+
 ## GMAP-fusion v0.3.0 (Nov 3, 2017)
 -removed any Trinity installation requirements
 -uses samtools v1.3 or greater
