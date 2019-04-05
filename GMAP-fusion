@@ -265,7 +265,7 @@ main: {
     $pipeliner->add_commands(new Command($cmd, "filter_by_annot_rules.ok"));
 
 
-    $cmd = "cp $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot.pass $output_directory/GMAP-fusion.fusion_predictions.tsv";
+    $cmd = "cp $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot.annot_filter.pass $output_directory/GMAP-fusion.fusion_predictions.tsv";
     $pipeliner->add_commands(new Command($cmd, "copy_final_predictions_to_deliverable.ok"));
 
     
