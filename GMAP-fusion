@@ -59,8 +59,6 @@ my $usage = <<__EOUSAGE__;
 #  --max_fuzzy_overlap <int>               :maximum allowed overlap of extended length from breakpoint (default: $MAX_FUZZY_OVERLAP)
 #
 #
-#  -E <float>                            E-value threshold for blast searches (default: 0.001)
-#
 #  --version                             report version ($VERSION)
 #
 ##############################################################################################################
