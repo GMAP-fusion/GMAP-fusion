@@ -47,9 +47,9 @@ my $usage = <<__EOUSAGE__;
 #  --output|o <string>             :output directory name (default: $output_directory)
 #
 #   
-#  --min_J|J <int>                 :minimum number of junction frags (default: $MIN_J)  
+#  --min_J <int>                 :minimum number of junction frags (default: $MIN_J)  
 #
-#  --min_sumJS|S <int>             :minimum sum (junction + spanning) frags (default: $MIN_SUM_JS)
+#  --min_sumJS <int>             :minimum sum (junction + spanning) frags (default: $MIN_SUM_JS)
 #
 #  --min_novel_junction_support <int>   :minimum number of junction reads required for novel (non-reference) exon-exon junction support.
 #                                        (default: $MIN_NOVEL_J)
@@ -72,7 +72,6 @@ __EOUSAGE__
 
 my $help_flag;
 my $transcripts_file;
-my $max_ref_splice_dist = -1;
 my $left_fq;
 my $right_fq;
 
@@ -82,32 +81,27 @@ my $genome_lib_dir;
 my $SHOW_VERSION = 0;
 
 &GetOptions ( 'help|h' => \$help_flag,
-              
+
+              ## Required
+              'transcripts|T=s' => \$transcripts_file,
               'genome_lib_dir=s' => \$genome_lib_dir,
               
-              'transcripts|T=s' => \$transcripts_file,
-              
-              'output|o=s' => \$output_directory,
-
-              'min_chim_len|L=i' => \$MIN_TRANS_LEN_TRY_CHIM,
-
-              'max_ref_splice_dist|D=i' => \$max_ref_splice_dist,
-              
-              'DEBUG' => \$DEBUG,
-
-              'CPU=i' => \$CPU,
-             
               'left_fq=s' => \$left_fq,
               'right_fq=s' => \$right_fq,
- 
-              'split_breakpoint_extend_length=i' => \$SPLIT_BREAKPOINT_EXTEND_LENGTH,
 
+              ## optional
+              'CPU=i' => \$CPU,
+              'min_chim_len|L=i' => \$MIN_TRANS_LEN_TRY_CHIM,
+              'output|o=s' => \$output_directory,
+              'min_J=i' => \$MIN_J,
+              'min_sumJS=i' => \$MIN_SUM_JS,
+              'min_novel_junction_support=i' => \$MIN_NOVEL_J,
+              'split_breakpoint_extend_length=i' => \$SPLIT_BREAKPOINT_EXTEND_LENGTH,
               'max_fuzzy_overlap=i' => \$MAX_FUZZY_OVERLAP,
-              
-              'genome_lib_dir=s' => \$genome_lib_dir,
-              
               'version' => \$SHOW_VERSION,
-              
+
+              'DEBUG' => \$DEBUG,
+
 );
 
 
