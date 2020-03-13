@@ -1,3 +1,7 @@
+## GMAP-fusion v0.4.2 (Mar 13, 2020)
+-updated submodules
+
+
 ## GMAP-fusion v0.4.1 (Apri 5, 2019)
 -patch release, updated submodules
 -including Docker
