@@ -11,7 +11,7 @@ my $minJS = $ARGV[2];
 my $min_novel_J = $ARGV[3];
 
 
-my $MIN_ANCHOR_ENTROPY = 1.5;
+my $MIN_ANCHOR_ENTROPY = 1.3; #TODO: make parameterizable!
 
 unless (defined ($minJ) && defined($minJS) && defined($min_novel_J)) {
     die $usage;
