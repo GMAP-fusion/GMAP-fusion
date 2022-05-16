@@ -128,8 +128,8 @@ RUN apt-get install -y git && apt-get clean
 
 WORKDIR $SRC
 
-ENV GMAP_Fusion_version 0.4.1
-ENV GMAP_Fusion_CO 857d0c717ecca9daf0d1a51ad9467063e9784dcf
+ENV GMAP_Fusion_version 0.4.2
+ENV GMAP_Fusion_CO  bfdecebf0b715e58e2a6fdea3cac703a83553b42
 
 RUN git clone https://github.com/GMAP-fusion/GMAP-fusion.git && \
 	cd GMAP-fusion && \
