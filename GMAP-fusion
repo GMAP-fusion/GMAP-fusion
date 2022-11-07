@@ -20,6 +20,8 @@ my $MIN_NOVEL_J = 3;
 my $MIN_J = 1;
 my $MIN_SUM_JS = 2;
 
+my $MIN_PER_ID = 98;
+
 my $SPLIT_BREAKPOINT_EXTEND_LENGTH = 25;
 my $MAX_FUZZY_OVERLAP = 12;
 
@@ -41,6 +43,8 @@ my $usage = <<__EOUSAGE__;
 #  Optional:
 #
 #  --CPU <int>                     :number threads for GMAP (default $CPU)
+#
+#  --min_per_id <int>              :minimum percent identity (default: $MIN_PER_ID)
 #
 #  --min_chim_len|L <int>            :minimum length for a chimeric alignment (default: $MIN_TRANS_LEN_TRY_CHIM)
 #
@@ -95,6 +99,7 @@ my $SHOW_VERSION = 0;
               'output|o=s' => \$output_directory,
               'min_J=i' => \$MIN_J,
               'min_sumJS=i' => \$MIN_SUM_JS,
+              'min_per_id=i' => \$MIN_PER_ID,
               'min_novel_junction_support=i' => \$MIN_NOVEL_J,
               'split_breakpoint_extend_length=i' => \$SPLIT_BREAKPOINT_EXTEND_LENGTH,
               'max_fuzzy_overlap=i' => \$MAX_FUZZY_OVERLAP,
@@ -180,7 +185,7 @@ main: {
     ###############################
 
     my $chims_described_outfile = "$gmap_output_file.chims_described";
-    $cmd = "$UTILDIR/gmap_genome_gff3_to_chim_summary.pl --gmap_gff3 $gmap_output_file --annot_gtf $REF_GTF > $chims_described_outfile";
+    $cmd = "$UTILDIR/gmap_genome_gff3_to_chim_summary.pl --gmap_gff3 $gmap_output_file --annot_gtf $REF_GTF --min_per_id $MIN_PER_ID  > $chims_described_outfile";
     
     $pipeliner->add_commands(new Command($cmd, "chims_described.ok") );
     
