@@ -4,6 +4,8 @@ set -ev
 
 VERSION=`cat VERSION.txt`
 
-docker build -t trinityctat/gmapfusion:${VERSION} .
-docker build -t trinityctat/gmapfusion:latest .
+cachebustdate=$(date +%s)
+
+docker build -t trinityctat/gmapfusion:${VERSION} --build-arg CACHEBUST=${cachebustdate} .
+docker build -t trinityctat/gmapfusion:latest --build-arg CACHEBUST=${cachebustdate} .
 

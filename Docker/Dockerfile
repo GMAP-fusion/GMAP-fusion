@@ -127,10 +127,13 @@ RUN GMAP_URL="http://research-pub.gene.com/gmap/src/gmap-gsnap-$GMAP_VERSION.tar
 
 RUN apt-get install -y git && apt-get clean
 
+ARG CACHEBUST=1
+
 WORKDIR $SRC
 
+
 ENV GMAP_Fusion_version 0.5.0
-ENV GMAP_Fusion_CO  9a00fcbb7c2a292ca9822902de5ccb40bd743a49
+ENV GMAP_FUSION_CO  e12aa8b1ee813f467d1519ad881decc757712d47
 
 RUN git clone https://github.com/GMAP-fusion/GMAP-fusion.git && \
 	cd GMAP-fusion && \
