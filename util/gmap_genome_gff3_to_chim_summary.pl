@@ -167,6 +167,8 @@ main: {
     ## header
     print join("\t", "#transcript", "num_alignments", "align_descr(s)", "[chim_annot_mapping]") . "\n";
     
+    my $error_counter = 0;
+
     foreach my $target (keys %target_to_aligns) {
      
 
@@ -182,11 +184,20 @@ main: {
         
         my @spans;
         foreach my $span_id (@span_ids) {
+            print STDERR "// $target  $span_id\n";
             my $exon_hits_aref = $target_to_aligns{$target}->{$span_id};
-            my $span_struct = &convert_to_span($exon_hits_aref);
-            if ($span_struct->{per_id} >= $MIN_PER_ID) {
-                push (@spans, $span_struct);
+            
+            eval {
+                my $span_struct = &convert_to_span($exon_hits_aref);
+                if ($span_struct->{per_id} >= $MIN_PER_ID) {
+                    push (@spans, $span_struct);
+                }
+            };
+            if ($@) {
+                print STDERR $@;
+                $error_counter += 1;
             }
+            
         }
         
 
@@ -296,6 +307,11 @@ main: {
         
 
     } # end for each target
+    
+    
+    if ($error_counter) {
+        print STDERR "*** $error_counter alignment errors were identified.\n\n";
+    }
     
     
     exit(0);
@@ -501,7 +517,7 @@ sub convert_to_span {
 
         my $exon_chr = $exon->{chr};
         if ($chr && $exon_chr ne $chr) {
-            die "inconsistent chr assignments";
+            die "inconsistent ($chr) chr assignments: " . Dumper($exons_aref);
         }
         else {
             $chr = $exon_chr;
@@ -509,7 +525,7 @@ sub convert_to_span {
         
         my $exon_orient = $exon->{orient};
         if ($orient && $exon_orient ne $orient) {
-            die "inconsistent exon orient";
+            die "inconsistent exon orient: " . Dumper($exon) . " all exons: " . Dumper($exons_aref);;
         }
         else {
             $orient = $exon_orient;

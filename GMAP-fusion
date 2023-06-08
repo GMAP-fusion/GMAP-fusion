@@ -10,7 +10,7 @@ use lib ("$FindBin::Bin/PerlLib");
 use Pipeliner;
 use Process_cmd;
 
-my $VERSION = "v0.4.2";
+my $VERSION = "v0.5.0";
 
 
 my $CPU = 4;
@@ -18,9 +18,9 @@ my $MIN_TRANS_LEN_TRY_CHIM = 30;
 my $output_directory = "GMAP_Fusion";
 my $MIN_NOVEL_J = 3;
 my $MIN_J = 1;
-my $MIN_SUM_JS = 2;
+my $MIN_SUM_JS = 1;
 
-my $MIN_PER_ID = 98;
+my $MIN_PER_ID = 90;
 
 my $SPLIT_BREAKPOINT_EXTEND_LENGTH = 25;
 my $MAX_FUZZY_OVERLAP = 12;
