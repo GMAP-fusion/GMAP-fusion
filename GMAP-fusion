@@ -9,6 +9,7 @@ use Cwd;
 use lib ("$FindBin::Bin/PerlLib");
 use Pipeliner;
 use Process_cmd;
+use File::Basename;
 
 my $VERSION = "v0.5.0";
 
@@ -32,7 +33,7 @@ my $usage = <<__EOUSAGE__;
 #
 #  Required:
 #
-#  --transcripts|T <string>        :transcript fasta file
+#  --transcripts|T <string>        :transcript fasta or fastq file
 #
 #  --genome_lib_dir <string>             directory containing genome lib (see http://FusionFilter.github.io for details)
 #
@@ -173,6 +174,27 @@ main: {
     my $pipeliner = new Pipeliner(-verbose => 2,
                                   -checkpoint_dir => "$intermediates_dir/__checkpts",
         );
+    
+
+    # make fasta file from fastq
+    
+    # first, check if gzipped.
+    if ($transcripts_file =~ /\.gz$/) {
+        my $uncompressed_transcripts_file = basename($transcripts_file);
+        $uncompressed_transcripts_file =~ s/\.gz$//;
+        my $cmd = "gunzip -c $transcripts_file > $uncompressed_transcripts_file";
+        $pipeliner->add_commands(new Command($cmd, "gunzip_transcripts.ok"));
+        $transcripts_file = "$uncompressed_transcripts_file";
+        
+        if ($uncompressed_transcripts_file =~ /(fastq|fq)$/i) {
+            # convert from fastq to fasta
+            $cmd = "seqtk seq -a $uncompressed_transcripts_file > $uncompressed_transcripts_file.fasta";
+            $pipeliner->add_commands(new Command($cmd, "fastq_to_fasta_seqtk.ok"));
+
+            $transcripts_file = "$uncompressed_transcripts_file.fasta";
+        }
+    }
+    
     
     ####################################################
     # run GMAP to identify potential fusion transcripts
