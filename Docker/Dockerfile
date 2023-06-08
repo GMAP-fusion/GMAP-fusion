@@ -1,17 +1,59 @@
-FROM ubuntu:18.04
-
+FROM ubuntu:20.04
 MAINTAINER bhaas@broadinstitute.org
 
-RUN apt-get update && apt-get install -y gcc g++ perl python3 automake make cmake \
-                                       wget curl libdb-dev \
-				       bzip2 zlibc zlib1g zlib1g-dev  default-jre \
-                       python-setuptools python-dev build-essential \
-				       unzip libbz2-dev  liblzma-dev && \
-    apt-get clean
+ENV DEBIAN_FRONTEND=noninteractive
 
 
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python get-pip.py
+RUN apt-get -qq update && apt-get -qq -y install \
+    automake \
+    build-essential \
+    bzip2 \
+    cmake \
+    curl \
+    default-jre \
+    fort77 \
+    ftp \
+    g++ \
+    gcc \
+    gfortran \
+    git \
+    libblas-dev \
+    libbz2-dev \
+    libcairo2-dev \
+    libcurl4-openssl-dev \
+    libdb-dev \
+    libghc-zlib-dev \
+    libjpeg-dev \
+    liblzma-dev \
+    libncurses-dev \
+    libncurses5-dev \
+    libpcre3-dev \
+    libpng-dev \
+    libreadline-dev \
+    libreadline-dev \
+    libssl-dev \
+    libtbb-dev \
+    libx11-dev \
+    libxml2-dev \
+    libxt-dev \
+    libzmq3-dev \
+    make \
+    nano \
+    perl \
+    pkg-config \
+    python3 \
+    python3-dev \
+    python3-distutils \
+    python3-pip \
+    python3-setuptools \
+    rsync \
+    texlive-latex-base \
+    tzdata \
+    unzip \
+    wget \
+    x11-common \
+    zlib1g-dev
+
 
 RUN pip install numpy
 
@@ -42,70 +84,29 @@ RUN cpanm install JSON::XS.pm
 ######################
 
 
-########
-# Samtools
-
-
- 
-ENV SAMTOOLS_VERSION=1.9
-
-RUN SAMTOOLS_URL="https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2" && \
-   cd $SRC && \
-   wget $SAMTOOLS_URL && \
-   tar xvf samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
-   cd samtools-${SAMTOOLS_VERSION}/htslib-${SAMTOOLS_VERSION} && ./configure && make && make install && \
-   cd ../ && ./configure --without-curses && make && make install
-
-
-########
-# Trinity
-
-ENV TRINITY_VERSION=2.8.4
-
-RUN TRINITY_URL="https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v${TRINITY_VERSION}.tar.gz" && \
-   cd $SRC && \
-   wget $TRINITY_URL && \
-   tar xvf Trinity-v${TRINITY_VERSION}.tar.gz && \
-   cd trinityrnaseq-Trinity-v${TRINITY_VERSION} && make
-
-
-ENV TRINITY_HOME /usr/local/src/trinityrnaseq-Trinity-v${TRINITY_VERSION}
-
 
 ## Bowtie2
 WORKDIR $SRC
-RUN wget https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.3.3.1/bowtie2-2.3.3.1-linux-x86_64.zip/download -O bowtie2-2.3.3.1-linux-x86_64.zip && \
-    unzip bowtie2-2.3.3.1-linux-x86_64.zip && \
-    mv bowtie2-2.3.3.1-linux-x86_64/bowtie2* $BIN && \
+ENV BOWTIE2_VERSION 2.4.4
+RUN wget https://sourceforge.net/projects/bowtie-bio/files/bowtie2/${BOWTIE2_VERSION}/bowtie2-${BOWTIE2_VERSION}-linux-x86_64.zip/download -O bowtie2-${BOWTIE2_VERSION}-linux-x86_64.zip && \
+    unzip bowtie2-${BOWTIE2_VERSION}-linux-x86_64.zip && \
+    mv bowtie2-${BOWTIE2_VERSION}-linux-x86_64/bowtie2* $BIN && \
     rm *.zip && \
-    rm -r bowtie2-2.3.3.1-linux-x86_64
+    rm -r bowtie2-${BOWTIE2_VERSION}-linux-x86_64
 
-## Jellyfish
+## Samtools
 WORKDIR $SRC
-RUN wget https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz && \
-    tar xvf jellyfish-2.2.7.tar.gz && \
-    cd jellyfish-2.2.7/ && \
+ENV SAMTOOLS_VERSION 1.13
+RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
+    tar xvf samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
+    cd samtools-${SAMTOOLS_VERSION} && \
     ./configure && make && make install
-            
-## Salmon
+
+
+## Seqtk
 WORKDIR $SRC
-RUN wget https://github.com/COMBINE-lab/salmon/releases/download/v0.9.1/Salmon-0.9.1_linux_x86_64.tar.gz && \
-    tar xvf Salmon-0.9.1_linux_x86_64.tar.gz && \
-    ln -s $SRC/Salmon-latest_linux_x86_64/bin/salmon $BIN/.
-
-
-
-
-##############
-## STAR
-
-ENV STAR_VERSION=2.7.0f
-RUN STAR_URL="https://github.com/alexdobin/STAR/archive/${STAR_VERSION}.tar.gz" &&\
-    wget -P $SRC $STAR_URL &&\
-    tar -xvf $SRC/${STAR_VERSION}.tar.gz -C $SRC && \
-    mv $SRC/STAR-${STAR_VERSION}/bin/Linux_x86_64_static/STAR /usr/local/bin
-
-
+RUN git clone https://github.com/lh3/seqtk.git && \
+             cd seqtk &&  make && cp seqtk $BIN/
 
 
 ########
@@ -128,13 +129,16 @@ RUN apt-get install -y git && apt-get clean
 
 WORKDIR $SRC
 
-ENV GMAP_Fusion_version 0.4.2
-ENV GMAP_Fusion_CO  bfdecebf0b715e58e2a6fdea3cac703a83553b42
+ENV GMAP_Fusion_version 0.5.0
+ENV GMAP_Fusion_CO  9a00fcbb7c2a292ca9822902de5ccb40bd743a49
 
 RUN git clone https://github.com/GMAP-fusion/GMAP-fusion.git && \
 	cd GMAP-fusion && \
     git checkout ${GMAP_FUSION_CO} && \
     git submodule init && git submodule update
+
+
+RUN mv $SRC/GMAP-fusion/* $BIN/
 
 
 
