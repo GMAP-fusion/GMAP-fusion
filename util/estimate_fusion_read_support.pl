@@ -25,13 +25,18 @@ my $MIN_ENTROPY = 1.5;
 
 $trans_fasta = &ensure_full_path($trans_fasta);
 $chims_described = &ensure_full_path($chims_described);
-$left_fq_file = &ensure_full_path($left_fq_file);
-$right_fq_file = &ensure_full_path($right_fq_file);
-
+if ($left_fq_file ne "NA") {
+    $left_fq_file = &ensure_full_path($left_fq_file);
+}
+if ($right_fq_file ne "NA") {
+    $right_fq_file = &ensure_full_path($right_fq_file);
+}
 
 foreach my $file ($trans_fasta, $chims_described, $left_fq_file, $right_fq_file) {
-    unless (-s $file) {
-        confess "Error, cannot locate file $file";
+    if ($file ne "NA") {
+        unless (-s $file) {
+            confess "Error, cannot locate file $file";
+        }
     }
 }
 
@@ -45,19 +50,28 @@ main: {
     print STDERR "-extracting chim candidate seqs\n";
     my %chim_seqs = &extract_chim_candidate_seqs($trans_fasta, $chim_candidates_fasta_filename, \%chims);
     
-    print STDERR "-geting breakpoint region entropy\n";
+    print STDERR "-getting breakpoint region entropy\n";
     my %chim_brkpt_entropy = &get_breakpoint_region_entropy(\%chims, \%chim_seqs);
     
-    print STDERR "-aligning reads using bowtie2\n";
-    my $bowtie2_bam = &align_reads_using_bowtie2($chim_candidates_fasta_filename, $left_fq_file, $right_fq_file);
-
     print STDERR "-computing trans_seq_entropy\n";
     my %trans_seq_entropy = &compute_trans_seq_entropy(\%chim_seqs);
+
     
-    print STDERR "-capturing fusion support.\n";
-    my %fusion_support = &capture_fusion_support($bowtie2_bam, \%chims, \%trans_seq_entropy);
+    my %fusion_support;
+
+    if ($left_fq_file ne "NA") {
+        print STDERR "-aligning reads using bowtie2\n";
+        my $bowtie2_bam = &align_reads_using_bowtie2($chim_candidates_fasta_filename, $left_fq_file, $right_fq_file);
     
+        print STDERR "-capturing fusion support.\n";
+        %fusion_support = &capture_fusion_support($bowtie2_bam, \%chims, \%trans_seq_entropy);
+
+    }
+    else {
+        print STDERR "-no short reads provided. Skipping short read eval\n";
+    }
     
+        
     ## generate output, include junction and spanning frag support info:
     
     foreach my $target_trans_id (keys %chims) {
@@ -65,22 +79,31 @@ main: {
         my @junction_reads;
         my @spanning_frags;
         
-        if (exists $fusion_support{$target_trans_id}) {
-            my $info_href = $fusion_support{$target_trans_id};
-            if (exists $info_href->{spanning}) {
-                @spanning_frags = keys %{$info_href->{spanning}};
-            }
-            if (exists $info_href->{junction}) {
-                @junction_reads = keys %{$info_href->{junction}};
-            }
+        # init with just single long read support.
+        my $J = 1;
+        my $S = 0;
+        
+        if ($left_fq_file ne "NA") {  
 
-        }
+            if (exists $fusion_support{$target_trans_id}) {
+                my $info_href = $fusion_support{$target_trans_id};
+                if (exists $info_href->{spanning}) {
+                    @spanning_frags = keys %{$info_href->{spanning}};
+                }
+                if (exists $info_href->{junction}) {
+                    @junction_reads = keys %{$info_href->{junction}};
+                }
                 
+            }
+            
+            $J = scalar(@junction_reads);
+            $S = scalar(@spanning_frags);
+        }
+        
+
         my $spanning_frag_list = join(",", @spanning_frags) || ".";
         my $junction_frag_list = join(",", @junction_reads) || ".";
 
-        my $J = scalar(@junction_reads);
-        my $S = scalar(@spanning_frags);
 
         
         my $chim_info_aref = $chims{$target_trans_id};
@@ -232,7 +255,6 @@ sub capture_fusion_support {
     return(%fusion_support);
 
 }
-
 
 
 ####
