@@ -133,7 +133,7 @@ WORKDIR $SRC
 
 
 ENV GMAP_Fusion_version 0.5.0
-ENV GMAP_FUSION_CO  e12aa8b1ee813f467d1519ad881decc757712d47
+ENV GMAP_FUSION_CO  3fb29179d42018fd25b23c1e4a40506233195726
 
 RUN git clone https://github.com/GMAP-fusion/GMAP-fusion.git && \
 	cd GMAP-fusion && \

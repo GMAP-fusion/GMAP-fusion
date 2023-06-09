@@ -58,6 +58,7 @@ task GMAP_FUSION_TASK {
     rm ~{genome_lib_tar}
     
     # GMAP-Fusion
+    GMAP-fusion --version
 
     GMAP-fusion -T ~{transcripts} \
                 --genome_lib_dir GRCh38_gencode_v22_CTAT_lib_Mar012021.gmap_fusion_only/ctat_genome_lib_build_dir \
