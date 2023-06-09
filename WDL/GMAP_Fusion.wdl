@@ -8,7 +8,7 @@ workflow gmap_fusion_wf {
        File transcripts
        File genome_lib_tar
        Int min_per_id=90
-       
+       Boolean no_annot_filter=false
       
        String docker="trinityctat/gmapfusion:latest"
        Int cpu = 10
@@ -26,11 +26,12 @@ workflow gmap_fusion_wf {
           transcripts=transcripts,
           genome_lib_tar=genome_lib_tar,
           min_per_id=min_per_id,
+      no_annot_filter=no_annot_filter,
           docker=docker,
           cpu=cpu,
           memory=memory,
           preemptible=preemptible,
-	      maxRetries=maxRetries,
+          maxRetries=maxRetries,
           disk_space_multiplier=disk_space_multiplier    
      }
 }
@@ -43,6 +44,7 @@ task GMAP_FUSION_TASK {
        File transcripts
        File genome_lib_tar
        Int min_per_id
+       Boolean no_annot_filter
     
        String docker
        Int cpu
@@ -69,7 +71,8 @@ task GMAP_FUSION_TASK {
                 --genome_lib_dir GRCh38_gencode_v22_CTAT_lib_Mar012021.gmap_fusion_only/ctat_genome_lib_build_dir \
                 -min_J 1  --min_sumJS 1 \
                 --min_per_id ~{min_per_id} \
-                -o gmap_fusion_outdir
+                -o gmap_fusion_outdir \
+        ~{true='--no_annot_filter' false='' no_annot_filter}
 
 
     mv gmap_fusion_outdir/GMAP-fusion.fusion_predictions.tsv ~{sample_name}.GMAP-fusion.fusion_predictions.tsv 
