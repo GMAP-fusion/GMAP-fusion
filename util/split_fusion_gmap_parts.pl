@@ -8,12 +8,13 @@ use lib ("$FindBin::Bin/../PerlLib");
 use Fasta_reader;
 use Pipeliner;
 
-my $usage = "\n\n\tusage: $0 gmap.map.gff3.chims_described gmap.map.gff3.chims_described.fasta EXTEND_LENGTH genome_lib_dir\n\n";
+my $usage = "\n\n\tusage: $0 gmap.map.gff3.chims_described gmap.map.gff3.chims_described.fasta EXTEND_LENGTH genome_lib_dir min_per_id\n\n";
 
 my $chims_described_file = $ARGV[0] or die $usage;
 my $chims_fasta_file = $ARGV[1] or die $usage;
 my $EXTEND = $ARGV[2] or die $usage;
 my $genome_lib_dir = $ARGV[3] or die $usage;
+my $min_per_id = $ARGV[4] or die $usage;
 
 ## configuration:
 my $GENOME = "$genome_lib_dir/ref_genome.fa";
@@ -23,6 +24,8 @@ my $GMAP_DB_NAME = "ref_genome.fa.gmap";
 
 main: {
 
+    $min_per_id = $min_per_id/100;
+    
     my %transcript_to_breakpoint = &parse_chimera_preds($chims_described_file);
 
     my $fasta_reader = new Fasta_reader($chims_fasta_file);
@@ -52,7 +55,7 @@ main: {
 
     ## run GMAP, capture all top hits within reason.
     my $gmap_output_file = "$chim_frag_file.gmap.gff3";
-    my $cmd = "gmap -D $GMAP_DB_DIR -d $GMAP_DB_NAME $chim_frag_file -f 3 -n 1 -t 4 --min-identity 0.98 > $gmap_output_file";
+    my $cmd = "gmap -D $GMAP_DB_DIR -d $GMAP_DB_NAME $chim_frag_file -f 3 -n 1 -t 4 --min-identity $min_per_id > $gmap_output_file";
     
     my $pipeliner = new Pipeliner(-verbose => 1);
     $pipeliner->add_commands(new Command($cmd, "$gmap_output_file.ok"));
