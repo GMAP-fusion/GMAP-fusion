@@ -7,7 +7,9 @@ workflow gmap_fusion_wf {
        String sample_name
        File transcripts
        File genome_lib_tar
-    
+       Int min_per_id=90
+       
+      
        String docker="trinityctat/gmapfusion:latest"
        Int cpu = 10
        String memory="50G"
@@ -15,6 +17,7 @@ workflow gmap_fusion_wf {
        Int maxRetries = 0
        Float disk_space_multiplier = 3.0
 
+      
      }
     
      call GMAP_FUSION_TASK {
@@ -22,11 +25,12 @@ workflow gmap_fusion_wf {
           sample_name=sample_name,
           transcripts=transcripts,
           genome_lib_tar=genome_lib_tar,
+          min_per_id=min_per_id,
           docker=docker,
           cpu=cpu,
           memory=memory,
           preemptible=preemptible,
-	  maxRetries=maxRetries,
+	      maxRetries=maxRetries,
           disk_space_multiplier=disk_space_multiplier    
      }
 }
@@ -38,6 +42,7 @@ task GMAP_FUSION_TASK {
        String sample_name
        File transcripts
        File genome_lib_tar
+       Int min_per_id
     
        String docker
        Int cpu
@@ -63,6 +68,7 @@ task GMAP_FUSION_TASK {
     GMAP-fusion -T ~{transcripts} \
                 --genome_lib_dir GRCh38_gencode_v22_CTAT_lib_Mar012021.gmap_fusion_only/ctat_genome_lib_build_dir \
                 -min_J 1  --min_sumJS 1 \
+                --min_per_id ~{min_per_id} \
                 -o gmap_fusion_outdir
 
 
