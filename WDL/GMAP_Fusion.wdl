@@ -26,6 +26,7 @@ workflow gmap_fusion_wf {
           cpu=cpu,
           memory=memory,
           preemptible=preemptible,
+	  maxRetries=maxRetries,
           disk_space_multiplier=disk_space_multiplier    
      }
 }
@@ -50,11 +51,11 @@ task GMAP_FUSION_TASK {
   
   command <<<
 
-    set -e
+    set -ex
 
     # untar the genome lib
-    tar xvf ${genome_lib_tar
-    rm ${genome_lib_tar}
+    tar xvf ~{genome_lib_tar}
+    rm ~{genome_lib_tar}
     
     # GMAP-Fusion
 
