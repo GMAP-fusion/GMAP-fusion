@@ -132,8 +132,8 @@ ARG CACHEBUST=1
 WORKDIR $SRC
 
 
-ENV GMAP_Fusion_version 0.5.0
-ENV GMAP_FUSION_CO  3fb29179d42018fd25b23c1e4a40506233195726
+ENV GMAP_Fusion_version 0.5.1
+ENV GMAP_FUSION_CO  b293e0863fefd740561fd188d4c1bfc6a6808936
 
 RUN git clone https://github.com/GMAP-fusion/GMAP-fusion.git && \
 	cd GMAP-fusion && \

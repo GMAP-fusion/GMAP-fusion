@@ -1,0 +1,6 @@
+{
+    "gmap_fusion_wf.transcripts" : "transcripts.fq.gz",
+    "gmap_fusion_wf.genome_lib_tar" : "genome_lib.tar",
+    "gmap_fusion_wf.sample_name" : "testing"
+
+}
