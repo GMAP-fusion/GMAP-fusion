@@ -14,7 +14,7 @@ my $minJS = $ARGV[2];
 my $min_novel_J = $ARGV[3];
 
 
-my $MIN_ANCHOR_ENTROPY = 1.5;
+my $MIN_ANCHOR_ENTROPY = 1.0;
 
 unless (defined ($minJ) && defined($minJS) && defined($min_novel_J)) {
     die $usage;
@@ -77,10 +77,10 @@ while (my $row = $delim_parser->get_row()) {
         $delim_writer->write_row($row);
     }
     else {
-        $row->{filtered} = "Fails to meet minJ($J) >= $minJ or minJS_sum($J + $S) >= $minJS requirement";
+        $row->{filtered} = "Fails to meet minJ($J) >= $minJ or minJS_sum($J + $S) >= $minJS requirement or not ref splice and J:$J < min_novel_J: $min_novel_J";
         $delim_writer_filt->write_row($row);
     }
-        
+    
 }
 
 
