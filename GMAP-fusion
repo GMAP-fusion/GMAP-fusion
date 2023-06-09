@@ -63,6 +63,7 @@ my $usage = <<__EOUSAGE__;
 #
 #  --max_fuzzy_overlap <int>               :maximum allowed overlap of extended length from breakpoint (default: $MAX_FUZZY_OVERLAP)
 #
+#  --no_annot_filter               : disable filtering outputs based on fusion annotations.
 #
 #  --version                             report version ($VERSION)
 #
@@ -84,6 +85,7 @@ my $DEBUG = 0;
 my $genome_lib_dir;
 
 my $SHOW_VERSION = 0;
+my $NO_ANNOTATION_FILTER = 0;
 
 &GetOptions ( 'help|h' => \$help_flag,
 
@@ -105,7 +107,8 @@ my $SHOW_VERSION = 0;
               'split_breakpoint_extend_length=i' => \$SPLIT_BREAKPOINT_EXTEND_LENGTH,
               'max_fuzzy_overlap=i' => \$MAX_FUZZY_OVERLAP,
               'version' => \$SHOW_VERSION,
-
+              
+              'no_annot_filter' => \$NO_ANNOTATION_FILTER,
               'DEBUG' => \$DEBUG,
 
 );
@@ -279,15 +282,23 @@ main: {
     $cmd = "$FindBin::Bin/FusionAnnotator/FusionAnnotator --genome_lib_dir $genome_lib_dir --annotate $preliminary_report_file.post_blast_and_promiscuity_filter > $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot";
     $pipeliner->add_commands(new Command($cmd, "annotate_fusions.ok"));
     
-    
-    $cmd = "$FindBin::Bin/FusionFilter/util/filter_by_annotation_rules.pl --fusions  $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot --genome_lib_dir $genome_lib_dir";
-    $pipeliner->add_commands(new Command($cmd, "filter_by_annot_rules.ok"));
+
+    if ($NO_ANNOTATION_FILTER) {
+        
+        $cmd = "cp $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot $output_directory/GMAP-fusion.fusion_predictions.tsv";
+        $pipeliner->add_commands(new Command($cmd, "copy_final_predictions_to_deliverable.no_annot_filter.ok"));
+
+    }
+    else {
+        
+        $cmd = "$FindBin::Bin/FusionFilter/util/filter_by_annotation_rules.pl --fusions  $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot --genome_lib_dir $genome_lib_dir";
+        $pipeliner->add_commands(new Command($cmd, "filter_by_annot_rules.ok"));
 
 
-    $cmd = "cp $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot.annot_filter.pass $output_directory/GMAP-fusion.fusion_predictions.tsv";
-    $pipeliner->add_commands(new Command($cmd, "copy_final_predictions_to_deliverable.ok"));
+        $cmd = "cp $preliminary_report_file.post_blast_and_promiscuity_filter.wAnnot.annot_filter.pass $output_directory/GMAP-fusion.fusion_predictions.tsv";
+        $pipeliner->add_commands(new Command($cmd, "copy_final_predictions_to_deliverable.ok"));
 
-    
+    }
     
     $pipeliner->run();
     
